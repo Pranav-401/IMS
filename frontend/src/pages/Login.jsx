@@ -1,5 +1,6 @@
 // Login.jsx
 import React, { useState } from "react";
+import axios from "axios"; // 👈 Import Axios
 import {
   FiLayers,
   FiUser,
@@ -8,47 +9,44 @@ import {
   FiArrowRight,
   FiKey,
 } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { Link, useNavigate } from "react-router-dom"; // 👈 Import useNavigate
+
+// Set the base URL for the backend API
+const API_BASE_URL = "http://localhost:5001/api";
 
 const Login = () => {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // State to handle login errors
-  const navigate = useNavigate(); // Hook for programmatically navigating
+  const navigate = useNavigate(); // For redirection
 
   const handleSubmit = async (e) => {
+    // 👈 Made function async
     e.preventDefault();
-    setError(""); // Clear previous errors
 
     try {
-      // API call to the backend login endpoint
-      const response = await fetch("http://localhost:3000/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ loginId, password }),
+      // NOTE: You don't have a specific login endpoint in your routes yet,
+      // but typically a POST to a /login or /auth endpoint is used.
+      // I'll simulate a login/auth check here.
+
+      const response = await axios.post(`${API_BASE_URL}/login`, {
+        loginId,
+        password,
       });
 
-      const data = await response.json();
+      // Handle successful login
+      console.log("Login Successful:", response.data);
+      alert("Sign In Successful!");
 
-      if (response.ok) {
-        // Successful login
-        console.log("Login Successful:", data.data);
-        alert("Login Successful! Welcome.");
-        // Example: Redirect to a dashboard page
-        navigate("/dashboard");
-      } else {
-        // Unsuccessful login (e.g., 401 Unauthorized, 404 Not Found)
-        setError(
-          data.message || "Login failed. Please check your credentials."
-        );
-        console.error("Login Error:", data.message);
-      }
-    } catch (err) {
-      // Network or other unexpected error
-      setError("An unexpected error occurred. Please try again later.");
-      console.error("Fetch Error:", err);
+      // Navigate to the dashboard or home page upon success
+      navigate("/dashboard");
+    } catch (error) {
+      // Handle login failure
+      const errorMessage =
+        error.response?.data?.message ||
+        "Login failed. Check your ID and password.";
+
+      console.error("Login Error:", error.response || error);
+      alert(`Login Failed: ${errorMessage}`);
     }
   };
 

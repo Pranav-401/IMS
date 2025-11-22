@@ -1,9 +1,9 @@
+import bcrypt from "bcryptjs"; // Used for password hashing and comparison
 import {
   createUserService,
   getAllUsersService,
   getUserByIdService,
-  updatePasswordService, // Renamed model function for clarity
-  loginUserService, // New import
+  updatePasswordService,
 } from "../model/userModel.js";
 
 //Standardized response function
@@ -15,10 +15,24 @@ const handleResponse = (res, status, message, data = null) => {
   });
 };
 
+// ===================================================================
+// USER REGISTRATION (Create User)
+// ===================================================================
 export const createUser = async (req, res, next) => {
   const { loginId, role, email, password } = req.body;
+
   try {
-    const newUser = await createUserService(loginId, role, email, password);
+    // 1. Hash the password before storing it in the database
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 2. Pass the hashed password to the service layer
+    const newUser = await createUserService(
+      loginId,
+      role,
+      email,
+      hashedPassword
+    );
     handleResponse(res, 201, "User created Successfully", newUser);
   } catch (error) {
     // Check for unique constraint violation for better error message
@@ -63,22 +77,24 @@ export const getUsersById = async (req, res, next) => {
   try {
     const user = await getUserByIdService(loginId);
     if (!user) return handleResponse(res, 404, "User Not Found");
-    handleResponse(res, 200, "User fetched Successfully", user);
+    handleResponse(res, 200, "User fetched successfully", user);
   } catch (error) {
     next(error);
   }
 };
 
-// Renamed and corrected: updatePassword -> updateUserPassword, uses req.params.id and req.body.password
-export const updateUserPassword = async (req, res, next) => {
-  const loginId = req.params.id; // Get loginId from URL parameter
-  const { password } = req.body; // Get new password from body
+// ===================================================================
+// UPDATE PASSWORD
+// ===================================================================
+export const updatePassword = async (req, res, next) => {
+  const { loginId } = req.params; // Get ID from URL
+  const { password: newPassword } = req.body; // Get new password from body
+
   try {
-    // NOTE: Using the renamed service function
-    const updatedUser = await updatePasswordService(loginId, password);
+    // NOTE: You should also hash the newPassword here before calling the service!
+    const updatedUser = await updatePasswordService(loginId, newPassword);
 
     if (!updatedUser) return handleResponse(res, 404, "User Not Found");
-
     handleResponse(res, 200, "Password UPDATED Successfully", updatedUser);
   } catch (error) {
     next(error);

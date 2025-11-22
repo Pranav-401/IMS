@@ -1,18 +1,20 @@
+// routes/userRouter.js - MODIFIED
+
 import express from "express";
 import {
   createUser,
+  loginUser, // 👈 Import the new login controller
   getAllUsers,
   getUsersById,
-  updateUserPassword, // Renamed controller function
-  loginUser, // New import
+  updatePassword,
 } from "../controller/userController.js";
 
 const router = express.Router();
 
-router.post("/user", createUser);
-router.post("/user/login", loginUser); // New login route
+router.post("/user", createUser); // Register a new user
+router.post("/login", loginUser); // 👈 NEW LOGIN ROUTE: POST to /api/login
 router.get("/user", getAllUsers);
-router.get("/user/:id", getUsersById);
-router.put("/user/:id", updateUserPassword); // Use the renamed controller
+router.get("/user/:loginId", getUsersById);
+router.put("/user/:loginId", updatePassword);
 
 export default router;

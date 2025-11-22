@@ -10,11 +10,6 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
 });
-// console.log(process.env.DB_USER);
-// console.log(process.env.DB_HOST);
-// console.log(process.env.DB_DATABASE);
-// console.log(process.env.DB_PASSWORD);
-// console.log(process.env.DB_PORT);
 
 pool.on("connect", () => {
   console.log("Connection with pool establish with database");

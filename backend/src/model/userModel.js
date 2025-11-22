@@ -17,8 +17,13 @@ export const getAllUsersService = async () => {
   return result.rows;
 };
 
+<<<<<<< HEAD
 // Original loginId parameter name was loginId, but query used id. Changed query to use loginId.
 export const getUserByIdService = async (loginId) => {
+=======
+export const getUserByIdService = async (loginId) => {
+  // CORRECTED: Select where loginId matches the input
+>>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
   const result = await pool.query(
     "SELECT * FROM usersRole where loginId = $1",
     [loginId]
@@ -26,7 +31,10 @@ export const getUserByIdService = async (loginId) => {
   return result.rows[0];
 };
 
+<<<<<<< HEAD
 // HASHING PASSWORD before creation
+=======
+>>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
 export const createUserService = async (loginId, role, email, password) => {
   const hashedPassword = await hashPassword(password);
   const result = await pool.query(
@@ -38,12 +46,21 @@ export const createUserService = async (loginId, role, email, password) => {
   return userWithoutPassword;
 };
 
+<<<<<<< HEAD
 // New Service for Login
 export const loginUserService = async (loginId, password) => {
   // 1. Fetch user by loginId
   const result = await pool.query(
     "SELECT * FROM usersRole WHERE loginId = $1",
     [loginId]
+=======
+export const updatePasswordService = async (loginId, newPassword) => {
+  // Renamed internally for clarity
+  // CORRECTED: Update usersRole table and use loginId as condition
+  const result = await pool.query(
+    "UPDATE usersRole SET password=$1 where loginId=$2 RETURNING loginId, email", // Return non-sensitive data
+    [newPassword, loginId]
+>>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
   );
   const user = result.rows[0];
 
