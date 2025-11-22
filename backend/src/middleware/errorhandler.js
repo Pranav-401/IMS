@@ -1,10 +1,12 @@
-//centralized error handling
+// centralized error handling
 
 const errorHandling = (err, req, res, next) => {
   console.log(err.stack);
-  res.status(500).json({
-    status: 500,
-    message: "Something Went Wrong ",
+  // Use the error status if provided (e.g., from unique constraint check in controller)
+  const status = err.status || 500;
+  res.status(status).json({
+    status: status,
+    message: err.message || "Something Went Wrong", // Use the error's message
     error: err.message,
   });
 };

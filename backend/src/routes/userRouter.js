@@ -1,9 +1,7 @@
-// routes/userRouter.js - MODIFIED
-
 import express from "express";
 import {
   createUser,
-  loginUser, // 👈 Import the new login controller
+  loginUser,
   getAllUsers,
   getUsersById,
   updatePassword,
@@ -12,9 +10,9 @@ import {
 const router = express.Router();
 
 router.post("/user", createUser); // Register a new user
-router.post("/login", loginUser); // 👈 NEW LOGIN ROUTE: POST to /api/login
+router.post("/login", loginUser); // Handle user login
 router.get("/user", getAllUsers);
-router.get("/user/:loginId", getUsersById);
-router.put("/user/:loginId", updatePassword);
+router.get("/user/:id", getUsersById); // Using ':id' to match controller logic
+router.put("/user/:id", updatePassword); // Using ':id' to match controller logic
 
 export default router;

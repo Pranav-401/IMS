@@ -1,19 +1,18 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import pool from "./config/db.js";
+import pool from "./config/db.js"; // Import needed for the '/' route check
 import userRoutes from "./routes/userRouter.js";
 import errorHandling from "./middleware/errorhandler.js";
-import createUserTable from "./data/createUserTable.js";
+import createUserRoleTable from "./data/createUserTable.js"; // <-- FIX: Correct import name
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000; // Assuming backend runs on 3000
+const port = process.env.PORT || 3000;
 
-// middleware
+// Middleware
 app.use(express.json());
-// Allowing requests from frontend, assuming it runs on port 5173 (Vite default) or 3001
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -21,16 +20,16 @@ app.use(
   })
 );
 
-// route
+// Routes
 app.use("/api", userRoutes);
 
-// error handling
+// Error handling middleware (must be last)
 app.use(errorHandling);
 
-// create user table before starting the app if not found
-createUserTable();
+// Create user table before starting the app if not found
+createUserRoleTable(); // <-- FIX: Correct function call
 
-// testing postgres connection
+// Testing postgres connection
 app.get("/", async (req, res) => {
   try {
     const result = await pool.query("SELECT current_database()");
@@ -40,7 +39,7 @@ app.get("/", async (req, res) => {
   }
 });
 
-// server
+// Server listener
 app.listen(port, () => {
   console.log(`Server is running in port ${port}`);
 });

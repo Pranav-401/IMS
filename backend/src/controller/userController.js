@@ -1,9 +1,10 @@
-import bcrypt from "bcryptjs"; // Used for password hashing and comparison
+import bcrypt from "bcryptjs";
 import {
   createUserService,
   getAllUsersService,
   getUserByIdService,
   updatePasswordService,
+  loginService, // <-- FIX: Correctly imported loginService
 } from "../model/userModel.js";
 
 //Standardized response function
@@ -48,7 +49,7 @@ export const createUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   const { loginId, password } = req.body;
   try {
-    const user = await loginUserService(loginId, password);
+    const user = await loginService(loginId, password); // <-- FIX: Correctly calling loginService
 
     if (!user) {
       // User not found or password incorrect
@@ -63,16 +64,15 @@ export const loginUser = async (req, res, next) => {
 
 export const getAllUsers = async (req, res, next) => {
   try {
-    const user = await getAllUsersService();
-    handleResponse(res, 200, "Users fetched Successfully", user);
+    const users = await getAllUsersService();
+    handleResponse(res, 200, "Users fetched Successfully", users);
   } catch (error) {
     next(error);
   }
 };
 
 export const getUsersById = async (req, res, next) => {
-  // NOTE: The original code was using req.body.loginId, but REST conventions usually use req.params for GET /:id
-  // I will use req.params.id to match the router definition.
+  // Use req.params.id assuming router uses a generic ID parameter
   const loginId = req.params.id;
   try {
     const user = await getUserByIdService(loginId);
@@ -87,11 +87,11 @@ export const getUsersById = async (req, res, next) => {
 // UPDATE PASSWORD
 // ===================================================================
 export const updatePassword = async (req, res, next) => {
-  const { loginId } = req.params; // Get ID from URL
+  const { loginId } = req.params;
   const { password: newPassword } = req.body; // Get new password from body
 
   try {
-    // NOTE: You should also hash the newPassword here before calling the service!
+    // updatePasswordService handles hashing the newPassword internally
     const updatedUser = await updatePasswordService(loginId, newPassword);
 
     if (!updatedUser) return handleResponse(res, 404, "User Not Found");

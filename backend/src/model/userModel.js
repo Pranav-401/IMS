@@ -12,18 +12,14 @@ const comparePassword = (password, hashedPassword) => {
   return bcrypt.compare(password, hashedPassword);
 };
 
+// --- CRUD Operations ---
+
 export const getAllUsersService = async () => {
   const result = await pool.query("SELECT * FROM usersRole");
   return result.rows;
 };
 
-<<<<<<< HEAD
-// Original loginId parameter name was loginId, but query used id. Changed query to use loginId.
 export const getUserByIdService = async (loginId) => {
-=======
-export const getUserByIdService = async (loginId) => {
-  // CORRECTED: Select where loginId matches the input
->>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
   const result = await pool.query(
     "SELECT * FROM usersRole where loginId = $1",
     [loginId]
@@ -31,36 +27,30 @@ export const getUserByIdService = async (loginId) => {
   return result.rows[0];
 };
 
-<<<<<<< HEAD
-// HASHING PASSWORD before creation
-=======
->>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
-export const createUserService = async (loginId, role, email, password) => {
-  const hashedPassword = await hashPassword(password);
+export const createUserService = async (
+  loginId,
+  role,
+  email,
+  hashedPassword
+) => {
+  // NOTE: Password should already be hashed in the controller before reaching here
   const result = await pool.query(
     "INSERT INTO usersRole (loginId, role, email, password) VALUES ($1,$2,$3,$4) RETURNING *",
-    [loginId, role, email, hashedPassword] // Store hashed password
+    [loginId, role, email, hashedPassword]
   );
   // Return the user object WITHOUT the password
   const { password: _, ...userWithoutPassword } = result.rows[0];
   return userWithoutPassword;
 };
 
-<<<<<<< HEAD
-// New Service for Login
-export const loginUserService = async (loginId, password) => {
-  // 1. Fetch user by loginId
+// --- Authentication Operations ---
+
+// Correct service for user login (checks credentials)
+export const loginService = async (loginId, password) => {
+  // 1. Get the user (including the stored hashed password)
   const result = await pool.query(
-    "SELECT * FROM usersRole WHERE loginId = $1",
+    "SELECT * FROM usersRole where loginId = $1",
     [loginId]
-=======
-export const updatePasswordService = async (loginId, newPassword) => {
-  // Renamed internally for clarity
-  // CORRECTED: Update usersRole table and use loginId as condition
-  const result = await pool.query(
-    "UPDATE usersRole SET password=$1 where loginId=$2 RETURNING loginId, email", // Return non-sensitive data
-    [newPassword, loginId]
->>>>>>> 1bfd937381443dbb3e0bb4675b72e5153fe1f0e0
   );
   const user = result.rows[0];
 
@@ -68,7 +58,7 @@ export const updatePasswordService = async (loginId, newPassword) => {
     return null; // User not found
   }
 
-  // 2. Compare the provided password with the stored hashed password
+  // 2. Compare the provided plain-text password with the stored hashed password
   const isMatch = await comparePassword(password, user.password);
 
   if (!isMatch) {
@@ -80,10 +70,11 @@ export const updatePasswordService = async (loginId, newPassword) => {
   return userWithoutPassword;
 };
 
-// Updating password service
+// Correct service for updating the password (hashes the new password before update)
 export const updatePasswordService = async (loginId, newPassword) => {
   const hashedPassword = await hashPassword(newPassword);
-  // NOTE: Changed "users" table name to "usersRole" to match your schema
+
+  // Update the password in the usersRole table
   const result = await pool.query(
     "UPDATE usersRole SET password=$1 where loginId=$2 RETURNING *",
     [hashedPassword, loginId]
