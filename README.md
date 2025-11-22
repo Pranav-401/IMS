@@ -1,169 +1,273 @@
-# 📦 StockMaster – Full-Stack Inventory Management System
+# StockMaster – Inventory Management System (IMS)
 
-This repository contains the complete codebase for the **StockMaster Inventory Management System (IMS)**, featuring a **React/Vite frontend** and a **Node.js/Express backend** connected to a **PostgreSQL database**.
+StockMaster is a modular Inventory Management System that digitizes and streamlines stock‑related operations within a business.  
+It replaces manual registers and Excel sheets with a centralized, real‑time, easy‑to‑use web app.
 
 ---
 
 ## 🚀 Setup & Installation
 
-This project requires two separate services (**frontend** and **backend**) to be run concurrently.
+This project uses two separate services that run concurrently:
 
-### ✅ Prerequisites
+- **Backend** – Node.js + Express + PostgreSQL
+- **Frontend** – (e.g. React/Vite) SPA
+
+### Prerequisites
 
 - Node.js (v18+)
-- npm (or yarn/pnpm)
-- PostgreSQL Database instance
+- npm (or yarn / pnpm)
+- PostgreSQL database instance
 
 ---
 
-## 1. Backend Setup
+## 1️⃣ Backend Setup
 
 The backend handles all data storage, processing, and API endpoints.
 
+> ✅ **Default backend port:** `5001`
+
 ### A. Environment Configuration
 
-Navigate to the `backend` directory.  
-Create a file named `.env` and configure the following variables.  
-Note that the backend runs on port **5001**.
+1. Go to the `backend` directory.
+2. Create a `.env` file and configure the following variables:
 
 ```env
 # Server Configuration
 PORT=5001
-FRONTEND_URL=http://localhost:5173  # Must match your frontend development port
 
-# PostgreSQL Database Credentials
-DB_USER=your_postgres_user
-DB_HOST=localhost
-DB_DATABASE=stockmaster_db
-DB_PASSWORD=your_password
-DB_PORT=5432
+# PostgreSQL Configuration
+PGHOST=localhost
+PGPORT=5432
+PGDATABASE=stockmaster_db
+PGUSER=your_db_user
+PGPASSWORD=your_db_password
 ```
 
-### B. Run Backend
-
-Install dependencies:
+3. Install dependencies:
 
 ```bash
 cd backend
 npm install
 ```
 
-Start the server (this also runs database migration to create the `usersRole` table):
+4. Run database migrations / table creation scripts (for example):
+
+```bash
+npm run migrate
+# or
+node src/data/createTables.js
+```
+
+5. Start the backend server:
 
 ```bash
 npm run dev
-```
-
-The API will be accessible at:
-
-```text
-http://localhost:5001/api
+# or
+npm start
 ```
 
 ---
 
-## 2. Frontend Setup
+## 2️⃣ Frontend Setup (Example: Vite + React)
 
-The frontend is a **single-page application (SPA)** built with **React** and **Tailwind CSS**.
+If you want to keep frontend and backend in the **same root folder**, you can do:
 
-### A. API Configuration
+```bash
+# From project root
+npm create vite@latest frontend
+# Choose React + JavaScript template
+cd frontend
+npm install
+npm run dev
+```
 
-Navigate to the `frontend` directory.  
-Ensure that the API base URL in your frontend files (like `Login.jsx`) points to the correct backend port:
+Configure your frontend to call the backend APIs (for example):
 
-```js
-// In Login.jsx and other API service files
+```ts
 const API_BASE_URL = "http://localhost:5001/api";
 ```
 
-### B. Run Frontend
+---
 
-Install dependencies (including necessary React libraries):
+## 🗄 Database Design
 
-```bash
-cd frontend
-npm install
-npm install react-router-dom axios
-# If using external icon packs:
-# npm install react-icons
+The StockMaster system uses a relational **PostgreSQL** database.  
+I designed the schema starting from **users and their roles**, then modeled how they interact with **warehouses** and **products**.
+
+### 🧩 ER Diagram
+
+The following diagram shows the high‑level design of the core tables used in StockMaster:
+
+![Database Design Diagram](./backend/src/data/database-design.jpg)
+
+> The diagram connects **User Role → Inventory Manager → Warehouse → Product → Quality**.
+
+---
+
+### 1. Entity Overview
+
+Main entities in the system:
+
+- **UserRole** – who is using the system and with what permissions.
+- **InventoryManager** – a specialized user responsible for a warehouse.
+- **Warehouse** – physical storage location where stock is kept.
+- **Product** – items being stored, counted, and moved.
+- **Quality** – tracks the condition of products (good vs damaged quantity).
+
+---
+
+### 2. Tables and Columns
+
+#### 2.1 `user_role`
+
+Stores login credentials and the role of each user.
+
+| Column     | Type       | Description                                          |
+| ---------- | ---------- | ---------------------------------------------------- |
+| `login_id` | VARCHAR PK | Unique ID for each user (primary key).               |
+| `role`     | VARCHAR    | Role of the user (e.g. `Admin`, `InventoryManager`). |
+| `password` | VARCHAR    | Hashed password for authentication.                  |
+
+---
+
+#### 2.2 `inventory_manager`
+
+Represents inventory managers and links them to both a login and a warehouse.
+
+| Column         | Type       | Description                                 |
+| -------------- | ---------- | ------------------------------------------- |
+| `id`           | SERIAL PK  | Internal unique identifier for the manager. |
+| `login_id`     | VARCHAR FK | References `user_role.login_id`.            |
+| `location`     | VARCHAR    | Base location / city of the manager.        |
+| `warehouse_id` | INT FK     | References `warehouse.warehouse_id`.        |
+| `schedule`     | VARCHAR    | Work schedule or shift information.         |
+
+---
+
+#### 2.3 `warehouse`
+
+Each row represents a physical warehouse.
+
+| Column         | Type      | Description                                        |
+| -------------- | --------- | -------------------------------------------------- |
+| `warehouse_id` | SERIAL PK | Unique ID of the warehouse.                        |
+| `location`     | VARCHAR   | Address or area of the warehouse.                  |
+| `status`       | VARCHAR   | Status (e.g. `Active`, `Inactive`, `Maintenance`). |
+| `product_id`   | INT FK    | (Optional) points to a main product stored here.   |
+| `vendor_name`  | VARCHAR   | Name of the vendor supplying this warehouse.       |
+
+> 💡 In a more advanced version, product–warehouse relationships can be moved to a separate **stock** (junction) table to support many‑to‑many mapping. For this basic design, `product_id` is kept in `warehouse` to show a simple link.
+
+---
+
+#### 2.4 `product`
+
+Represents a single product type in the system.
+
+| Column       | Type      | Description                            |
+| ------------ | --------- | -------------------------------------- |
+| `product_id` | SERIAL PK | Unique ID of the product.              |
+| `quantity`   | INT       | Current quantity for that product.     |
+| `quality_id` | INT FK    | References `quality.quality_id`.       |
+| `amount`     | NUMERIC   | Monetary value / price of the product. |
+
+---
+
+#### 2.5 `quality`
+
+Tracks quality information (good vs damaged items) for a product.
+
+| Column        | Type      | Description                   |
+| ------------- | --------- | ----------------------------- |
+| `quality_id`  | SERIAL PK | Unique ID for quality record. |
+| `damage_item` | INT       | Number of damaged items.      |
+| `good_item`   | INT       | Number of good/usable items.  |
+
+---
+
+### 3. Relationships Between Tables
+
+- **UserRole → InventoryManager**  
+  `inventory_manager.login_id` **FK** → `user_role.login_id`  
+  Each inventory manager must be a valid user with a specific role.
+
+- **InventoryManager → Warehouse**  
+  `inventory_manager.warehouse_id` **FK** → `warehouse.warehouse_id`  
+  Links managers to the warehouse they are responsible for.
+
+- **Warehouse → Product**  
+  `warehouse.product_id` **FK** → `product.product_id`  
+  Shows which product is mainly associated with a warehouse (simple design).
+
+- **Product → Quality**  
+  `product.quality_id` **FK** → `quality.quality_id`  
+  Connects a product to its quality details (good vs damaged items).
+
+---
+
+### 4. Sample PostgreSQL Schema (DDL)
+
+Below is an example of how this design can be implemented in PostgreSQL:
+
+```sql
+-- 1. User Role
+CREATE TABLE user_role (
+  login_id   VARCHAR(100) PRIMARY KEY,
+  role       VARCHAR(50) NOT NULL,
+  password   VARCHAR(255) NOT NULL
+);
+
+-- 2. Warehouse
+CREATE TABLE warehouse (
+  warehouse_id SERIAL PRIMARY KEY,
+  location     VARCHAR(255) NOT NULL,
+  status       VARCHAR(50)  NOT NULL,
+  product_id   INT,
+  vendor_name  VARCHAR(255)
+);
+
+-- 3. Quality
+CREATE TABLE quality (
+  quality_id   SERIAL PRIMARY KEY,
+  damage_item  INT DEFAULT 0,
+  good_item    INT DEFAULT 0
+);
+
+-- 4. Product
+CREATE TABLE product (
+  product_id  SERIAL PRIMARY KEY,
+  quantity    INT NOT NULL,
+  quality_id  INT REFERENCES quality(quality_id),
+  amount      NUMERIC(10,2) NOT NULL
+);
+
+-- 5. Inventory Manager
+CREATE TABLE inventory_manager (
+  id           SERIAL PRIMARY KEY,
+  login_id     VARCHAR(100) REFERENCES user_role(login_id),
+  location     VARCHAR(255),
+  warehouse_id INT REFERENCES warehouse(warehouse_id),
+  schedule     VARCHAR(255)
+);
 ```
 
-Start the development server (default Vite port is usually **5173**):
-
-```bash
-npm run dev
-```
-
-The frontend application should now be accessible in your browser, and it will communicate with the backend on port **5001**.
-
 ---
 
-## 📂 Backend Project Structure
+### 5. Design Rationale – How I Designed It
 
-The API follows a standard layered architecture:
+1. **Started from users and roles**  
+   I first created a `user_role` table so authentication and authorization are centralized.
 
-| Directory / File             | Role                                                            |
-| ---------------------------- | --------------------------------------------------------------- |
-| `config/db.js`               | PostgreSQL connection pool setup.                               |
-| `data/createUserTable.js`    | Initial database schema creation (e.g., `usersRole`).           |
-| `middleware/errorHandler.js` | Centralized error handling.                                     |
-| `model/`                     | Data/Service Layer (DB interaction, business logic, mock data). |
-| `controller/`                | Controller Layer (API route handlers, request validation).      |
-| `routes/`                    | Routing Layer (Defines URL paths and maps to controllers).      |
-| `index.js`                   | Main entry point and router registration.                       |
+2. **Separated responsibilities**  
+   Inventory managers have extra attributes (warehouse and schedule), so I created a dedicated `inventory_manager` table linked back to `user_role`.
 
----
+3. **Modeled physical storage**  
+   The `warehouse` table represents real‑world locations where items are stored.
 
-## 🔑 Full API Endpoints Reference
+4. **Modeled products and their condition**  
+   The `product` table stores quantity and price, while `quality` tracks how many items are in good or damaged condition.
 
-All API endpoints are prefixed with:
-
-```text
-/api
-```
+5. **Connected everything using foreign keys**  
+   Foreign key relationships ensure data consistency and clearly show how users, managers, warehouses, and products are related inside the system.
 
 ---
-
-### 1. User Management (`/api`)
-
-| Module | Method | Endpoint        | Description                       |
-| ------ | ------ | --------------- | --------------------------------- |
-| Auth   | POST   | `/api/user`     | Register a new user.              |
-| Auth   | POST   | `/api/login`    | Authenticate user credentials.    |
-| Users  | GET    | `/api/user/:id` | Fetch a single user by `loginId`. |
-| Users  | PUT    | `/api/user/:id` | Update user password.             |
-
----
-
-### 2. Dashboard Module (`/api/dashboard`)
-
-| Module | Method | Endpoint         | Description                                                  |
-| ------ | ------ | ---------------- | ------------------------------------------------------------ |
-| Data   | GET    | `/api/dashboard` | Fetches KPIs, move history, alerts, and inventory snapshots. |
-
----
-
-### 3. Products Module (`/api/products`)
-
-| Module  | Method | Endpoint                | Description                                        |
-| ------- | ------ | ----------------------- | -------------------------------------------------- |
-| CRUD    | GET    | `/api/products`         | Retrieves a list of all products.                  |
-| Filters | GET    | `/api/products/filters` | Retrieves category, warehouse, and status filters. |
-| CRUD    | POST   | `/api/products`         | Creates a new product record.                      |
-| CRUD    | PUT    | `/api/products/:id`     | Updates an existing product record.                |
-| CRUD    | DELETE | `/api/products/:id`     | Deletes a product record.                          |
-
----
-
-### 4. Receipts Module (`/api/receipts`)
-
-Manages the workflow for **incoming goods and shipments**.
-
-| Module | Method | Endpoint                   | Description                                                               |
-| ------ | ------ | -------------------------- | ------------------------------------------------------------------------- |
-| Data   | GET    | `/api/receipts`            | Retrieves the list of all inbound receipts.                               |
-| Data   | GET    | `/api/receipts/auxdata`    | Retrieves auxiliary data (Suppliers, Statuses) for forms.                 |
-| Detail | GET    | `/api/receipts/:id`        | Retrieves detailed information for a specific receipt (line items, logs). |
-| CRUD   | POST   | `/api/receipts`            | Creates a new receipt (saved as `'Draft'`).                               |
-| Status | PUT    | `/api/receipts/status/:id` | Updates the status of a receipt (body: `{ "newStatus": "Waiting" }`).     |
-| CRUD   | DELETE | `/api/receipts/:id`        | Deletes a receipt document.                                               |
