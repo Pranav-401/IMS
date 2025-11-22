@@ -1,13 +1,6 @@
 // Register.jsx - Enhanced and Modern
 import React, { useState } from "react";
-import {
-  FiLayers,
-  FiUser,
-  FiLock,
-  FiMail,
-  FiArrowLeft,
-  FiPlusSquare,
-} from "react-icons/fi";
+import { FiLayers, FiArrowLeft, FiPlusSquare } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 const Register = () => {

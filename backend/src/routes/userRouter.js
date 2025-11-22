@@ -1,16 +1,18 @@
 import express from "express";
 import {
-  createUserService,
-  getAllUsersService,
-  getUserByIdService,
-  updatePassword,
-} from "../model/userModel.js";
+  createUser,
+  getAllUsers,
+  getUsersById,
+  updateUserPassword, // Renamed controller function
+  loginUser, // New import
+} from "../controller/userController.js";
 
 const router = express.Router();
 
-router.post("/user", createUserService);
-router.get("/user", getAllUsersService);
-router.get("/user/:id", getUserByIdService);
-router.put("/user/:id", updatePassword);
+router.post("/user", createUser);
+router.post("/user/login", loginUser); // New login route
+router.get("/user", getAllUsers);
+router.get("/user/:id", getUsersById);
+router.put("/user/:id", updateUserPassword); // Use the renamed controller
 
 export default router;

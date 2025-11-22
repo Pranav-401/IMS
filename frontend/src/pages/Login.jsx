@@ -8,17 +8,48 @@ import {
   FiArrowRight,
   FiKey,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate for redirection
 
 const Login = () => {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState(""); // State to handle login errors
+  const navigate = useNavigate(); // Hook for programmatically navigating
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Simulate Login Logic (Client-side)
-    console.log("Attempting login:", { loginId, password });
-    alert("Simulated Sign In Clicked!");
+    setError(""); // Clear previous errors
+
+    try {
+      // API call to the backend login endpoint
+      const response = await fetch("http://localhost:3000/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ loginId, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Successful login
+        console.log("Login Successful:", data.data);
+        alert("Login Successful! Welcome.");
+        // Example: Redirect to a dashboard page
+        navigate("/dashboard");
+      } else {
+        // Unsuccessful login (e.g., 401 Unauthorized, 404 Not Found)
+        setError(
+          data.message || "Login failed. Please check your credentials."
+        );
+        console.error("Login Error:", data.message);
+      }
+    } catch (err) {
+      // Network or other unexpected error
+      setError("An unexpected error occurred. Please try again later.");
+      console.error("Fetch Error:", err);
+    }
   };
 
   return (
@@ -84,6 +115,13 @@ const Login = () => {
               />
             </div>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <p className="text-sm text-red-500 font-medium text-center">
+              {error}
+            </p>
+          )}
 
           {/* Sign In Button */}
           <button
