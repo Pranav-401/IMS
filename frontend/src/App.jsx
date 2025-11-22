@@ -11,17 +11,17 @@ import Receipts from "./components/Receipt.jsx";
 
 function App() {
   return (
-    // <div className="montserrat">
-    // <Routes>
-    //   <Route path="/" element={<Home />} />
-    //   <Route path="/login" element={<Login />} />
-    //   <Route path="/register" element={<Register />} />
-    //   {/* Add a placeholder for Forgot Password if needed */}
-    // </Routes>
-    // </div>
+    <div className="montserrat">
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      {/* Add a placeholder for Forgot Password if needed */}
+    </Routes>
+    </div>
 
     // <Products />
-    <Receipts />
+    // <Receipts />
   );
 }
 

@@ -1,5 +1,6 @@
 // Register.jsx - Enhanced and Modern
 import React, { useState } from "react";
+import axios from "axios"; // 👈 Import Axios
 import {
   FiLayers,
   FiUser,
@@ -8,7 +9,10 @@ import {
   FiArrowLeft,
   FiPlusSquare,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 👈 Import useNavigate
+
+// Set the registration endpoint (Backend Port: 3000, Route: /api/user)
+const REGISTER_URL = "http://localhost:5001/api/user"; 
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,23 +21,50 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => { // 👈 Made function async
     e.preventDefault();
-    // In a real application, sophisticated validation happens here
-    // before sending data to the server (e.g., uniqueness checks).
+    
     if (formData.password !== formData.confirmPassword) {
       alert("Error: Passwords do not match!");
       return;
     }
 
-    console.log("Registration Data Submitted:", formData);
-    alert("Simulated Account Creation Successful!");
+    try {
+      // 1. Prepare data for the API (must include 'role' as per your controller/model)
+      const registrationData = {
+        loginId: formData.loginId,
+        email: formData.email,
+        password: formData.password,
+        role: "user", // Hardcoded default role for registration
+      };
+
+      // 2. Make the POST request using Axios
+      const response = await axios.post(REGISTER_URL, registrationData);
+
+      // 3. Handle success response
+      console.log("Registration Successful:", response.data);
+      alert(response.data.message || "Account Created Successfully!");
+      
+      // Redirect to the login page
+      navigate("/login"); 
+
+    } catch (error) {
+      // 4. Handle error response
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.message || 
+        "Failed to create account.";
+        
+      console.error("Registration Error:", error.response || error);
+      alert(`Registration Failed: ${errorMessage}`);
+    }
   };
 
   return (

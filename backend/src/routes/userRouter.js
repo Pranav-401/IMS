@@ -1,16 +1,20 @@
+// routes/userRouter.js - MODIFIED
+
 import express from "express";
 import {
-  createUserService,
-  getAllUsersService,
-  getUserByIdService,
+  createUser,
+  loginUser, // 👈 Import the new login controller
+  getAllUsers,
+  getUsersById,
   updatePassword,
-} from "../model/userModel.js";
+} from "../controller/userController.js";
 
 const router = express.Router();
 
-router.post("/user", createUserService);
-router.get("/user", getAllUsersService);
-router.get("/user/:id", getUserByIdService);
-router.put("/user/:id", updatePassword);
+router.post("/user", createUser); // Register a new user
+router.post("/login", loginUser); // 👈 NEW LOGIN ROUTE: POST to /api/login
+router.get("/user", getAllUsers);
+router.get("/user/:loginId", getUsersById);
+router.put("/user/:loginId", updatePassword);
 
 export default router;

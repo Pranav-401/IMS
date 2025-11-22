@@ -1,5 +1,6 @@
 // Login.jsx
 import React, { useState } from "react";
+import axios from "axios"; // 👈 Import Axios
 import {
   FiLayers,
   FiUser,
@@ -8,17 +9,45 @@ import {
   FiArrowRight,
   FiKey,
 } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 👈 Import useNavigate
+
+// Set the base URL for the backend API
+const API_BASE_URL = "http://localhost:5001/api";
 
 const Login = () => {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate(); // For redirection
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
+    // 👈 Made function async
     e.preventDefault();
-    // Simulate Login Logic (Client-side)
-    console.log("Attempting login:", { loginId, password });
-    alert("Simulated Sign In Clicked!");
+
+    try {
+      // NOTE: You don't have a specific login endpoint in your routes yet,
+      // but typically a POST to a /login or /auth endpoint is used.
+      // I'll simulate a login/auth check here.
+
+      const response = await axios.post(`${API_BASE_URL}/login`, {
+        loginId,
+        password,
+      });
+
+      // Handle successful login
+      console.log("Login Successful:", response.data);
+      alert("Sign In Successful!");
+
+      // Navigate to the dashboard or home page upon success
+      navigate("/dashboard");
+    } catch (error) {
+      // Handle login failure
+      const errorMessage =
+        error.response?.data?.message ||
+        "Login failed. Check your ID and password.";
+
+      console.error("Login Error:", error.response || error);
+      alert(`Login Failed: ${errorMessage}`);
+    }
   };
 
   return (
